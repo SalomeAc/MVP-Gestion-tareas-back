@@ -1,0 +1,25 @@
+{
+  "name": "mvp-gestion-tareas-back",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SalomeAc/MVP-Gestion-tareas-back.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SalomeAc/MVP-Gestion-tareas-back/issues"
+  },
+  "homepage": "https://github.com/SalomeAc/MVP-Gestion-tareas-back#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
+}
