@@ -13,6 +13,15 @@ router.use("/users", userRoutes);
 //router.use("/lists", listRoutes);
 
 /**
+ * Root endpoint for the API.
+ * Useful for a quick health check to confirm the API is responding.
+ */
+
+router.get("/", (req, res) => {
+  res.send("API funcionando");
+});
+
+/**
  * Export the main router instance.
  * This is imported in `index.js` and mounted under `/api/`.
  */
