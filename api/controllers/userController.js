@@ -37,27 +37,20 @@ class UserController extends GlobalController {
    */
   async registerUser(req, res) {
     const { password, confirmPassword, ...rest } = req.body;
+
     if (!password || !confirmPassword) {
-      return res
-        .status(400)
-        .json({ message: "Todos los campos son obligatorios" });
+      return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
+
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Las contraseñas no coinciden" });
     }
-    let session;
+
     try {
-      session = await this.dao.model.db.startSession();
-      let user;
-      await session.withTransaction(async () => {
-        user = await this.dao.create({ ...rest, password });
-        const listData = {
-          title: "Tasks",
-          user: user._id,
-        };
-        // await ListDAO.create(listData, { session });
-      });
+      const user = await this.dao.create({ ...rest, password });
+
       return res.status(201).json({ message: "Registro exitoso" });
+
     } catch (err) {
       if (err.name === "ValidationError") {
         const firstMessage = Object.values(err.errors)[0].message;
@@ -68,14 +61,8 @@ class UserController extends GlobalController {
         return res.status(409).json({ message: "Email ya registrado" });
       }
 
-      if (process.env.NODE_ENV === "development") {
-        console.log(`Internal server error: ${err.message}`);
-      }
-      res
-        .status(500)
-        .json({ message: "Internal server error, try again later" });
-    } finally {
-      session.endSession(); // Transaction end
+      console.error(err);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 

@@ -24,7 +24,7 @@ router.get("/user-profile", authenticateToken, (req, res) =>
  * @body {string} confirmPassword - The password of the user.
  * @access Public
  */
-router.post("/", (req, res) => UserController.registerUser(req, res));
+router.post("/register", (req, res) => UserController.registerUser(req, res));
 
 /**
  * @route POST /api/users/login

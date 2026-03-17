@@ -48,22 +48,20 @@ const UserSchema = new mongoose.Schema({
 /**
  * Hashes the password after validating all fields just before saving the document.
  */
-UserSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function () {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }
-  next();
 });
 
 /**
  * Hashes the password after validating all fields just before updating the document.
  */
-UserSchema.post("findOneAndUpdate", async function (doc, next) {
+UserSchema.post("findOneAndUpdate", async function (doc) {
   if (doc && doc.password && !doc.password.startsWith("$2b$")) {
     const hashed = await bcrypt.hash(doc.password, 10);
     await doc.updateOne({ password: hashed }, { runValidators: false });
   }
-  next();
 });
 
 /**
