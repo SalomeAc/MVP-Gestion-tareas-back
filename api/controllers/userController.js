@@ -99,7 +99,7 @@ class UserController extends GlobalController {
       }
 
       //  para HU-13
-      if (user.isActive === false) {
+      if (!user.isActive) {
         return res.status(403).json({
           message: "Usuario desactivado",
         });
@@ -135,6 +135,33 @@ class UserController extends GlobalController {
       return res.status(500).json({
         message: "Internal server error",
       });
+    }
+  }
+
+  /**
+   * Deactivates the authenticated user's account.
+   *
+   * @async
+   * @param {import("express").Request} req - Express request object, `req.user` contains decoded JWT info
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Returns HTTP status codes:
+   *   - 200: User deactivated successfully
+   *   - 500: Internal server error
+   */
+  async deactivateUser(req, res) {
+  try {
+    const userId = req.user.id;
+
+    await this.dao.update(userId, { isActive: false });
+
+    return res.status(200).json({
+      message: "Usuario desactivado"
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
     }
   }
 
