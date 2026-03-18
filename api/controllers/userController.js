@@ -82,40 +82,86 @@ class UserController extends GlobalController {
     try {
       const { email, password } = req.body;
 
+      // 1. Validación básica
       if (!email || !password) {
-        return res
-          .status(400)
-          .json({ message: "Email y contraseña requeridos" });
+        return res.status(400).json({
+          message: "Email y contraseña requeridos",
+        });
       }
 
+      // 2. Buscar usuario
       const user = await this.dao.findByEmail(email);
+
       if (!user) {
-        return res
-          .status(401)
-          .json({ message: "Email o contraseña son incorrectos" });
+        return res.status(401).json({
+          message: "Email o contraseña incorrectos",
+        });
       }
 
+      //  para HU-13
+      if (!user.isActive) {
+        return res.status(403).json({
+          message: "Usuario desactivado",
+        });
+      }
+
+      // 3. Comparar contraseña
       const isMatch = await bcrypt.compare(password, user.password);
+
       if (!isMatch) {
-        return res
-          .status(401)
-          .json({ message: "Email o contraseña son incorrectos" });
+        return res.status(401).json({
+          message: "Email o contraseña incorrectos",
+        });
       }
 
+      // 4. Generar token
       const token = jwt.sign(
-        { id: user._id, email: user.email },
+        {
+          id: user._id,
+          email: user.email,
+        },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" },
+        { expiresIn: "1h" }
       );
 
-      return res.status(200).json({ token });
+      // 5. Respuesta
+      return res.status(200).json({
+        message: "Login exitoso",
+        token,
+      });
+
     } catch (err) {
-      if (process.env.NODE_ENV === "development") {
-        console.log(`Internal server error: ${err.message}`);
-      }
-      res
-        .status(500)
-        .json({ message: "Internal server error, try again later" });
+      console.error("Login error:", err);
+      return res.status(500).json({
+        message: "Internal server error",
+      });
+    }
+  }
+
+  /**
+   * Deactivates the authenticated user's account.
+   *
+   * @async
+   * @param {import("express").Request} req - Express request object, `req.user` contains decoded JWT info
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Returns HTTP status codes:
+   *   - 200: User deactivated successfully
+   *   - 500: Internal server error
+   */
+  async deactivateUser(req, res) {
+  try {
+    const userId = req.user.id;
+
+    await this.dao.update(userId, { isActive: false });
+
+    return res.status(200).json({
+      message: "Usuario desactivado"
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
     }
   }
 

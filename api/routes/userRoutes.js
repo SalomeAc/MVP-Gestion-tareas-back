@@ -78,6 +78,15 @@ router.post("/reset-password/:token", (req, res) =>
 );
 
 /**
+ * @route PUT /api/users/deactivate
+ * @description Deactivate the authenticated user's account.
+ * @access Private (requires valid JWT)
+ */
+router.put("/deactivate", authenticateToken, (req, res) =>
+  UserController.deactivateUser(req, res)
+);
+
+/**
  * Export the router instance to be mounted in the main routes file.
  */
 module.exports = router;
