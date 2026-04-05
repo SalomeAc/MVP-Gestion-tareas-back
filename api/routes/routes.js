@@ -1,6 +1,6 @@
 const express = require("express");
 const userRoutes = require("./userRoutes");
-//const taskRoutes = require("./taskRoutes");
+const taskRoutes = require("./taskRoutes");
 //const listRoutes = require("./listRoutes");
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
  * Mount project routes.
  */
 router.use("/users", userRoutes);
-//router.use("/tasks", taskRoutes);
+router.use("/tasks", taskRoutes);
 //router.use("/lists", listRoutes);
 
 /**

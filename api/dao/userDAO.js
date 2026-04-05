@@ -1,6 +1,5 @@
 const User = require("../models/user");
-// const List = require("../models/list");
-// const Task = require("../models/task");
+const Task = require("../models/task");
 const GlobalDAO = require("./globalDAO");
 
 /**
@@ -43,8 +42,6 @@ class UserDAO extends GlobalDAO {
    * @returns {Promise<Object|null>} Doc of the user just deleted, null if the doc didn't exist.
    */
   async delete(userId) {
-    await List.deleteMany({ user: userId });
-
     await Task.deleteMany({ user: userId });
 
     const deletedUser = await this.model.findByIdAndDelete(userId);
