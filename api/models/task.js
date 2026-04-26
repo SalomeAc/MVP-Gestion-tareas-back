@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ALLOWED_TASK_STATUS = ["pendiente", "en progreso", "completada"];
+const ALLOWED_TASK_STATUS = ["pendiente", "en curso", "finalizada"];
 
 /**
  * Task schema definition.
@@ -12,15 +12,15 @@ const TaskSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, "El titulo es obligatorio"],
+      required: [true, "El título es obligatorio"],
       trim: true,
-      maxlength: [120, "El titulo no puede superar 120 caracteres"],
+      maxlength: [100, "El título no puede exceder 100 caracteres"],
     },
     description: {
       type: String,
       trim: true,
       default: "",
-      maxlength: [1000, "La descripcion no puede superar 1000 caracteres"],
+      maxlength: [500, "La descripción no puede exceder 500 caracteres"],
     },
     dueDate: {
       type: Date,
@@ -30,9 +30,10 @@ const TaskSchema = new mongoose.Schema(
       type: String,
       enum: {
         values: ALLOWED_TASK_STATUS,
-        message: "El estado debe ser pendiente, en progreso o completada",
+        message: "El estado debe ser: pendiente, en curso o finalizada",
       },
       default: "pendiente",
+      lowercase: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,

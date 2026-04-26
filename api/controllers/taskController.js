@@ -1,85 +1,110 @@
 const mongoose = require("mongoose");
 const GlobalController = require("./globalController");
-const TaskDAO = require("../dao/taskDAO");
-const { ALLOWED_TASK_STATUS } = require("../models/task");
+const TaskService = require("../services/taskService");
 
 /**
  * Controller for task CRUD operations.
  * All operations are scoped to the authenticated user.
+ *
+ * Acts as the HTTP request/response handler, delegating business logic to the service layer.
  */
 class TaskController extends GlobalController {
-  constructor() {
-    super(TaskDAO);
-  }
-
   /**
    * Creates a new task for the authenticated user.
+   *
+   * @route POST /api/tasks
+   * @param {import("express").Request} req - Express request with body and user from auth middleware
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Sends JSON response
+   *
+   * @example
+   * POST /api/tasks
+   * Authorization: Bearer <token>
+   * {
+   *   "title": "Implement HU-03",
+   *   "description": "Create task endpoint",
+   *   "dueDate": "2024-05-15",
+   *   "status": "pendiente"
+   * }
+   *
+   * Response: 201 Created
+   * {
+   *   "_id": "507f1f77bcf86cd799439011",
+   *   "title": "Implement HU-03",
+   *   "description": "Create task endpoint",
+   *   "dueDate": "2024-05-15T00:00:00.000Z",
+   *   "status": "pendiente",
+   *   "user": "507f1f77bcf86cd799439010",
+   *   "createdAt": "2024-04-25T10:00:00.000Z",
+   *   "updatedAt": "2024-04-25T10:00:00.000Z"
+   * }
    */
   async createTask(req, res) {
     try {
-      const { title, description, dueDate, status } = req.body;
+      console.log(`[TaskController] Creating task for user: ${req.user.id}`);
 
-      if (!title || !String(title).trim()) {
-        return res.status(400).json({ message: "El titulo es obligatorio" });
-      }
-
-      if (status && !ALLOWED_TASK_STATUS.includes(status)) {
-        return res.status(400).json({
-          message: "Estado invalido. Valores permitidos: pendiente, en progreso, completada",
-        });
-      }
-
-      if (dueDate !== undefined && dueDate !== null && dueDate !== "" && Number.isNaN(Date.parse(dueDate))) {
-        return res.status(400).json({ message: "Formato de fecha limite invalido" });
-      }
-
-      const taskData = {
-        title: String(title).trim(),
-      };
-
-      if (description !== undefined) taskData.description = description;
-      if (status !== undefined) taskData.status = status;
-      if (dueDate !== undefined && dueDate !== "") taskData.dueDate = dueDate;
-
-      const task = await this.dao.createForUser(req.user.id, taskData);
+      const task = await TaskService.createTask(req.user.id, req.body);
 
       return res.status(201).json(task);
     } catch (err) {
-      if (err.name === "ValidationError") {
-        const firstMessage = Object.values(err.errors)[0].message;
-        return res.status(400).json({ message: firstMessage });
+      // Handle service layer errors
+      if (err.statusCode === 400) {
+        console.warn(`[TaskController] Validation error: ${err.message}`);
+        return res.status(400).json({
+          message: err.message,
+          ...(err.validationErrors && { errors: err.validationErrors }),
+        });
       }
 
-      console.error("Error creating task:", err);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error(`[TaskController] Unexpected error creating task: ${err.message}`);
+      return res.status(500).json({ message: "Error interno del servidor" });
     }
   }
 
+
   /**
    * Retrieves all tasks for the authenticated user.
+   *
+   * @route GET /api/tasks
+   * @param {import("express").Request} req - Express request with user from auth middleware
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Sends JSON response with tasks array
    */
   async getAllTasks(req, res) {
     try {
-      const tasks = await this.dao.getAllByUser(req.user.id);
+      console.log(`[TaskController] Fetching tasks for user: ${req.user.id}`);
+
+      const tasks = await TaskService.getAllTasks(req.user.id);
+
       return res.status(200).json(tasks);
     } catch (err) {
-      console.error("Error fetching tasks:", err);
-      return res.status(500).json({ message: "Internal server error" });
+      if (err.statusCode === 500) {
+        console.error(`[TaskController] Error fetching tasks: ${err.message}`);
+      }
+
+      return res.status(err.statusCode || 500).json({ message: err.message || "Error interno del servidor" });
     }
   }
 
   /**
    * Retrieves one task by id for the authenticated user.
+   *
+   * @route GET /api/tasks/:id
+   * @param {import("express").Request} req - Express request with task ID in params
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Sends JSON response with task
    */
   async getTaskById(req, res) {
     try {
       const { id } = req.params;
 
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ message: "ID de tarea invalido" });
+        return res.status(400).json({ message: "ID de tarea inválido" });
       }
 
-      const task = await this.dao.getByIdForUser(id, req.user.id);
+      console.log(`[TaskController] Fetching task ${id} for user: ${req.user.id}`);
+
+      const task = await TaskService.getTaskById(id, req.user.id);
 
       if (!task) {
         return res.status(404).json({ message: "Tarea no encontrada" });
@@ -87,89 +112,84 @@ class TaskController extends GlobalController {
 
       return res.status(200).json(task);
     } catch (err) {
-      console.error("Error fetching task:", err);
-      return res.status(500).json({ message: "Internal server error" });
+      if (err.statusCode === 500) {
+        console.error(`[TaskController] Error fetching task: ${err.message}`);
+      }
+
+      return res.status(err.statusCode || 500).json({ message: err.message || "Error interno del servidor" });
     }
   }
 
   /**
    * Updates one task by id for the authenticated user.
+   *
+   * @route PUT /api/tasks/:id
+   * @param {import("express").Request} req - Express request with task ID and update data
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Sends JSON response with updated task
    */
   async updateTask(req, res) {
     try {
       const { id } = req.params;
-      const { title, description, dueDate, status } = req.body;
 
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ message: "ID de tarea invalido" });
+        return res.status(400).json({ message: "ID de tarea inválido" });
       }
 
-      if (title !== undefined && !String(title).trim()) {
-        return res.status(400).json({ message: "El titulo es obligatorio" });
-      }
+      console.log(`[TaskController] Updating task ${id} for user: ${req.user.id}`);
 
-      if (status !== undefined && !ALLOWED_TASK_STATUS.includes(status)) {
-        return res.status(400).json({
-          message: "Estado invalido. Valores permitidos: pendiente, en progreso, completada",
-        });
-      }
-
-      if (dueDate !== undefined && dueDate !== null && dueDate !== "" && Number.isNaN(Date.parse(dueDate))) {
-        return res.status(400).json({ message: "Formato de fecha limite invalido" });
-      }
-
-      const updateData = {};
-
-      if (title !== undefined) updateData.title = String(title).trim();
-      if (description !== undefined) updateData.description = description;
-      if (status !== undefined) updateData.status = status;
-      if (dueDate !== undefined) updateData.dueDate = dueDate === "" ? null : dueDate;
-
-      if (Object.keys(updateData).length === 0) {
-        return res.status(400).json({ message: "No hay campos para actualizar" });
-      }
-
-      const task = await this.dao.updateByIdForUser(id, req.user.id, updateData);
-
-      if (!task) {
-        return res.status(404).json({ message: "Tarea no encontrada" });
-      }
+      const task = await TaskService.updateTask(id, req.user.id, req.body);
 
       return res.status(200).json(task);
     } catch (err) {
-      if (err.name === "ValidationError") {
-        const firstMessage = Object.values(err.errors)[0].message;
-        return res.status(400).json({ message: firstMessage });
+      if (err.statusCode === 400) {
+        console.warn(`[TaskController] Validation error: ${err.message}`);
+        return res.status(400).json({
+          message: err.message,
+          ...(err.validationErrors && { errors: err.validationErrors }),
+        });
       }
 
-      console.error("Error updating task:", err);
-      return res.status(500).json({ message: "Internal server error" });
+      if (err.statusCode === 404) {
+        return res.status(404).json({ message: err.message });
+      }
+
+      console.error(`[TaskController] Error updating task: ${err.message}`);
+      return res.status(500).json({ message: "Error interno del servidor" });
     }
   }
 
   /**
    * Hard-deletes one task by id for the authenticated user.
+   *
+   * @route DELETE /api/tasks/:id
+   * @param {import("express").Request} req - Express request with task ID in params
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Sends JSON response confirming deletion
    */
   async deleteTask(req, res) {
     try {
       const { id } = req.params;
 
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ message: "ID de tarea invalido" });
+        return res.status(400).json({ message: "ID de tarea inválido" });
       }
 
-      const task = await this.dao.deleteByIdForUser(id, req.user.id);
+      console.log(`[TaskController] Deleting task ${id} for user: ${req.user.id}`);
 
-      if (!task) {
-        return res.status(404).json({ message: "Tarea no encontrada" });
-      }
+      const task = await TaskService.deleteTask(id, req.user.id);
 
-      return res.status(200).json({ message: "Tarea eliminada correctamente" });
+      return res.status(200).json({ message: "Tarea eliminada correctamente", task });
     } catch (err) {
-      console.error("Error deleting task:", err);
-      return res.status(500).json({ message: "Internal server error" });
+      if (err.statusCode === 404) {
+        return res.status(404).json({ message: err.message });
+      }
+
+      console.error(`[TaskController] Error deleting task: ${err.message}`);
+      return res.status(500).json({ message: "Error interno del servidor" });
     }
   }
 }
 
 module.exports = new TaskController();
+
