@@ -26,6 +26,12 @@ const TaskSchema = new mongoose.Schema(
       type: Date,
       required: false,
     },
+    list: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "List",
+      required: false,
+      index: true,
+    },
     status: {
       type: String,
       enum: {

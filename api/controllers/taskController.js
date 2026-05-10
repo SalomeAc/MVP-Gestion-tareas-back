@@ -87,6 +87,36 @@ class TaskController extends GlobalController {
   }
 
   /**
+   * Retrieves all tasks for a specific list and user.
+   *
+   * @route GET /api/tasks/list/:listId
+   * @param {import("express").Request} req - Express request with list ID in params
+   * @param {import("express").Response} res - Express response object
+   * @returns {Promise<void>} Sends JSON response with tasks array
+   */
+  async getTasksByList(req, res) {
+    try {
+      const { listId } = req.params;
+
+      console.log(`[TaskController] Fetching tasks for list ${listId} and user: ${req.user.id}`);
+
+      const tasks = await TaskService.getTasksByList(listId, req.user.id);
+
+      return res.status(200).json(tasks);
+    } catch (err) {
+      if (err.statusCode === 400 || err.statusCode === 404) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
+
+      if (err.statusCode === 500) {
+        console.error(`[TaskController] Error fetching tasks by list: ${err.message}`);
+      }
+
+      return res.status(err.statusCode || 500).json({ message: err.message || "Error interno del servidor" });
+    }
+  }
+
+  /**
    * Retrieves one task by id for the authenticated user.
    *
    * @route GET /api/tasks/:id

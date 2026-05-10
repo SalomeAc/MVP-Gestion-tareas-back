@@ -23,6 +23,13 @@ router.post("/", (req, res) => TaskController.createTask(req, res));
 router.get("/", (req, res) => TaskController.getAllTasks(req, res));
 
 /**
+ * @route GET /api/tasks/list/:listId
+ * @description Get all tasks for a specific list owned by the authenticated user
+ * @access Private
+ */
+router.get("/list/:listId", (req, res) => TaskController.getTasksByList(req, res));
+
+/**
  * @route GET /api/tasks/:id
  * @description Get one task by id (owned by the authenticated user)
  * @access Private

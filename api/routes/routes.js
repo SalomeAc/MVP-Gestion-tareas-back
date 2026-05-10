@@ -1,7 +1,7 @@
 const express = require("express");
 const userRoutes = require("./userRoutes");
 const taskRoutes = require("./taskRoutes");
-//const listRoutes = require("./listRoutes");
+const listRoutes = require("./listRoutes");
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const router = express.Router();
  */
 router.use("/users", userRoutes);
 router.use("/tasks", taskRoutes);
-//router.use("/lists", listRoutes);
+router.use("/lists", listRoutes);
 
 /**
  * Root endpoint for the API.

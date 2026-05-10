@@ -23,7 +23,16 @@ class TaskDAO extends GlobalDAO {
    * @param {string} userId
    */
   async getAllByUser(userId) {
-    return this.model.find({ user: userId }).sort({ createdAt: -1 });
+    return this.model.find({ user: userId }).populate("list", "title description").sort({ createdAt: -1 });
+  }
+
+  /**
+   * Gets all tasks for a list owned by the user.
+   * @param {string} listId
+   * @param {string} userId
+   */
+  async getAllByListAndUser(listId, userId) {
+    return this.model.find({ list: listId, user: userId }).populate("list", "title description").sort({ createdAt: -1 });
   }
 
   /**
@@ -32,7 +41,7 @@ class TaskDAO extends GlobalDAO {
    * @param {string} userId
    */
   async getByIdForUser(taskId, userId) {
-    return this.model.findOne({ _id: taskId, user: userId });
+    return this.model.findOne({ _id: taskId, user: userId }).populate("list", "title description");
   }
 
   /**

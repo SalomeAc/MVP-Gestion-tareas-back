@@ -5,7 +5,9 @@
  * Acts as an intermediary between controllers and data access layer (DAO).
  */
 
+const mongoose = require("mongoose");
 const TaskDAO = require("../dao/taskDAO");
+const ListDAO = require("../dao/listDAO");
 const { validateTaskCreation, validateTaskUpdate } = require("../validators/taskValidator");
 
 class TaskService {
@@ -21,6 +23,8 @@ class TaskService {
     // Normalize and clean input data
     const sanitizedData = this._sanitizeTaskData(taskData);
 
+    await this._resolveListAssociation(userId, sanitizedData.list);
+
     // Validate business rules
     const validation = validateTaskCreation(sanitizedData);
     if (!validation.isValid) {
@@ -33,6 +37,10 @@ class TaskService {
     try {
       // Persist task to database (associated with user)
       const task = await TaskDAO.createForUser(userId, sanitizedData);
+
+      if (task.list) {
+        await task.populate("list", "title description");
+      }
 
       console.log(`[TaskService] Task created successfully. TaskID: ${task._id}, UserID: ${userId}`);
 
@@ -68,6 +76,8 @@ class TaskService {
     // Normalize and clean input data
     const sanitizedData = this._sanitizeTaskData(updateData);
 
+    await this._resolveListAssociation(userId, sanitizedData.list);
+
     // Validate business rules
     const validation = validateTaskUpdate(sanitizedData);
     if (!validation.isValid) {
@@ -79,6 +89,10 @@ class TaskService {
 
     try {
       const task = await TaskDAO.updateByIdForUser(taskId, userId, sanitizedData);
+
+      if (task && task.list) {
+        await task.populate("list", "title description");
+      }
 
       if (!task) {
         const error = new Error("Tarea no encontrada");
@@ -187,6 +201,27 @@ class TaskService {
   }
 
   /**
+   * Retrieves all tasks for a list owned by the authenticated user.
+   *
+   * @param {string} listId - The list ID
+   * @param {string} userId - The authenticated user's ID
+   * @returns {Promise<Array>} List of task documents
+   */
+  async getTasksByList(listId, userId) {
+    await this._resolveListAssociation(userId, listId);
+
+    try {
+      return await TaskDAO.getAllByListAndUser(listId, userId);
+    } catch (err) {
+      console.error(`[TaskService] Error fetching tasks for list ${listId} and user ${userId}:`, err.message);
+
+      const error = new Error("Error al obtener las tareas de la lista");
+      error.statusCode = 500;
+      throw error;
+    }
+  }
+
+  /**
    * Sanitizes and normalizes task data.
    * Trims strings, removes undefined/empty values, and applies defaults.
    *
@@ -209,11 +244,44 @@ class TaskService {
       sanitized.dueDate = data.dueDate;
     }
 
+    if (data.list !== undefined) {
+      sanitized.list = data.list === null || data.list === "" ? null : String(data.list).trim();
+    }
+
     if (data.status !== undefined) {
       sanitized.status = String(data.status).toLowerCase();
     }
 
     return sanitized;
+  }
+
+  /**
+   * Validates a list association when present and ensures the list belongs to the user.
+   *
+   * @private
+   * @param {string} userId
+   * @param {string|null|undefined} listId
+   */
+  async _resolveListAssociation(userId, listId) {
+    if (listId === undefined || listId === null || listId === "") {
+      return null;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(listId)) {
+      const error = new Error("ID de lista inválido");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const list = await ListDAO.getByIdForUser(listId, userId);
+
+    if (!list) {
+      const error = new Error("Lista no encontrada");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return list;
   }
 }
 
