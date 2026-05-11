@@ -1,27 +1,17 @@
-/**
- * Se hizo una carpeta utils que se usa para guardar funciones reutilizables que no 
- * dependen de controladores ni modelos.
- * Aquí centralizamos la lógica de envío de correos para no repetir código en cada 
- * controlador.
- */
+
 
 const nodemailer = require("nodemailer");
 
-// Transporter configurado (puedes usar Gmail u otro servicio SMTP)
+
 const transporter = nodemailer.createTransport({
   service: "gmail", 
   auth: {
-    user: process.env.EMAIL_USER, // correo
-    pass: process.env.EMAIL_PASS, // contraseña/app password
+    user: process.env.EMAIL_USER, 
+    pass: process.env.EMAIL_PASS, 
   },
 });
 
-/**
- * Envía un correo electrónico
- * @param {string} to - destinatario
- * @param {string} subject - asunto
- * @param {string} html - contenido en HTML
- */
+
 async function sendMail(to, subject, html) {
   try {
     await transporter.sendMail({
