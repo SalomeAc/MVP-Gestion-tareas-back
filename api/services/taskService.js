@@ -1,9 +1,4 @@
-/**
- * Task Service layer.
- *
- * Encapsulates business logic for task operations.
- * Acts as an intermediary between controllers and data access layer (DAO).
- */
+
 
 const mongoose = require("mongoose");
 const TaskDAO = require("../dao/taskDAO");
@@ -11,21 +6,14 @@ const ListDAO = require("../dao/listDAO");
 const { validateTaskCreation, validateTaskUpdate } = require("../validators/taskValidator");
 
 class TaskService {
-  /**
-   * Creates a new task for a user with business rule validation.
-   *
-   * @param {string} userId - The authenticated user's ID
-   * @param {Object} taskData - The task data from the request
-   * @returns {Promise<Object>} The created task document
-   * @throws {Object} Validation or database errors with appropriate messages
-   */
+  
   async createTask(userId, taskData) {
-    // Normalize and clean input data
+    
     const sanitizedData = this._sanitizeTaskData(taskData);
 
     await this._resolveListAssociation(userId, sanitizedData.list);
 
-    // Validate business rules
+    
     const validation = validateTaskCreation(sanitizedData);
     if (!validation.isValid) {
       const error = new Error(validation.errors[0]);
@@ -35,7 +23,7 @@ class TaskService {
     }
 
     try {
-      // Persist task to database (associated with user)
+      
       const task = await TaskDAO.createForUser(userId, sanitizedData);
 
       if (task.list) {
@@ -56,29 +44,21 @@ class TaskService {
         throw error;
       }
 
-      // Generic database error
+      
       const error = new Error("Error al crear la tarea");
       error.statusCode = 500;
       throw error;
     }
   }
 
-  /**
-   * Updates an existing task with validation.
-   *
-   * @param {string} taskId - The task ID to update
-   * @param {string} userId - The authenticated user's ID
-   * @param {Object} updateData - The fields to update
-   * @returns {Promise<Object>} The updated task document
-   * @throws {Object} Validation or database errors
-   */
+  
   async updateTask(taskId, userId, updateData) {
-    // Normalize and clean input data
+    
     const sanitizedData = this._sanitizeTaskData(updateData);
 
     await this._resolveListAssociation(userId, sanitizedData.list);
 
-    // Validate business rules
+    
     const validation = validateTaskUpdate(sanitizedData);
     if (!validation.isValid) {
       const error = new Error(validation.errors[0]);
@@ -105,7 +85,7 @@ class TaskService {
       return task;
     } catch (err) {
       if (err.statusCode) {
-        throw err; // Re-throw known errors
+        throw err; 
       }
 
       console.error(
@@ -127,13 +107,7 @@ class TaskService {
     }
   }
 
-  /**
-   * Retrieves a task by ID, ensuring it belongs to the user.
-   *
-   * @param {string} taskId - The task ID
-   * @param {string} userId - The authenticated user's ID
-   * @returns {Promise<Object|null>} The task document or null if not found
-   */
+  
   async getTaskById(taskId, userId) {
     try {
       return await TaskDAO.getByIdForUser(taskId, userId);
@@ -146,12 +120,7 @@ class TaskService {
     }
   }
 
-  /**
-   * Retrieves all tasks for a user.
-   *
-   * @param {string} userId - The authenticated user's ID
-   * @returns {Promise<Array>} List of task documents
-   */
+  
   async getAllTasks(userId) {
     try {
       return await TaskDAO.getAllByUser(userId);
@@ -164,13 +133,7 @@ class TaskService {
     }
   }
 
-  /**
-   * Deletes a task, ensuring it belongs to the user.
-   *
-   * @param {string} taskId - The task ID
-   * @param {string} userId - The authenticated user's ID
-   * @returns {Promise<Object|null>} The deleted task document or null if not found
-   */
+  
   async deleteTask(taskId, userId) {
     try {
       const task = await TaskDAO.deleteByIdForUser(taskId, userId);
@@ -186,7 +149,7 @@ class TaskService {
       return task;
     } catch (err) {
       if (err.statusCode) {
-        throw err; // Re-throw known errors
+        throw err; 
       }
 
       console.error(
@@ -200,13 +163,7 @@ class TaskService {
     }
   }
 
-  /**
-   * Retrieves all tasks for a list owned by the authenticated user.
-   *
-   * @param {string} listId - The list ID
-   * @param {string} userId - The authenticated user's ID
-   * @returns {Promise<Array>} List of task documents
-   */
+  
   async getTasksByList(listId, userId) {
     await this._resolveListAssociation(userId, listId);
 
@@ -221,14 +178,7 @@ class TaskService {
     }
   }
 
-  /**
-   * Sanitizes and normalizes task data.
-   * Trims strings, removes undefined/empty values, and applies defaults.
-   *
-   * @private
-   * @param {Object} data - The raw task data
-   * @returns {Object} The sanitized data
-   */
+  
   _sanitizeTaskData(data) {
     const sanitized = {};
 
@@ -255,13 +205,7 @@ class TaskService {
     return sanitized;
   }
 
-  /**
-   * Validates a list association when present and ensures the list belongs to the user.
-   *
-   * @private
-   * @param {string} userId
-   * @param {string|null|undefined} listId
-   */
+  
   async _resolveListAssociation(userId, listId) {
     if (listId === undefined || listId === null || listId === "") {
       return null;

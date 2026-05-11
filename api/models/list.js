@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
 
-/**
- * List schema definition.
- *
- * Each list belongs to a single user and can contain multiple tasks.
- */
+
 const ListSchema = new mongoose.Schema(
   {
     title: {

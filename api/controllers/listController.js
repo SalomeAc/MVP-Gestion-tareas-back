@@ -2,21 +2,7 @@ const mongoose = require("mongoose");
 const GlobalController = require("./globalController");
 const ListService = require("../services/listService");
 
-/**
- * Controller for list CRUD operations.
- * All operations are scoped to the authenticated user.
- *
- * Acts as the HTTP request/response handler, delegating business logic to the service layer.
- */
 class ListController extends GlobalController {
-  /**
-   * Creates a new list for the authenticated user.
-   *
-   * @route POST /api/lists
-   * @param {import("express").Request} req - Express request with body and user from auth middleware
-   * @param {import("express").Response} res - Express response object
-   * @returns {Promise<void>} Sends JSON response
-   */
   async createList(req, res) {
     try {
       console.log(`[ListController] Creating list for user: ${req.user.id}`);
@@ -25,7 +11,6 @@ class ListController extends GlobalController {
 
       return res.status(201).json(list);
     } catch (err) {
-      // Handle service layer errors
       if (err.statusCode === 400) {
         console.warn(`[ListController] Validation error: ${err.message}`);
         return res.status(400).json({
@@ -39,15 +24,6 @@ class ListController extends GlobalController {
     }
   }
 
-
-  /**
-   * Retrieves all lists for the authenticated user.
-   *
-   * @route GET /api/lists
-   * @param {import("express").Request} req - Express request with user from auth middleware
-   * @param {import("express").Response} res - Express response object
-   * @returns {Promise<void>} Sends JSON response with lists array
-   */
   async getAllLists(req, res) {
     try {
       console.log(`[ListController] Fetching lists for user: ${req.user.id}`);
@@ -64,14 +40,6 @@ class ListController extends GlobalController {
     }
   }
 
-  /**
-   * Retrieves one list by id for the authenticated user.
-   *
-   * @route GET /api/lists/:id
-   * @param {import("express").Request} req - Express request with list ID in params
-   * @param {import("express").Response} res - Express response object
-   * @returns {Promise<void>} Sends JSON response with list data
-   */
   async getListById(req, res) {
     try {
       const { id } = req.params;
@@ -98,14 +66,6 @@ class ListController extends GlobalController {
     }
   }
 
-  /**
-   * Updates one list by id for the authenticated user.
-   *
-   * @route PUT /api/lists/:id
-   * @param {import("express").Request} req - Express request with list ID and update data
-   * @param {import("express").Response} res - Express response object
-   * @returns {Promise<void>} Sends JSON response with updated list
-   */
   async updateList(req, res) {
     try {
       const { id } = req.params;
@@ -137,14 +97,6 @@ class ListController extends GlobalController {
     }
   }
 
-  /**
-   * Hard-deletes one list by id for the authenticated user.
-   *
-   * @route DELETE /api/lists/:id
-   * @param {import("express").Request} req - Express request with list ID in params
-   * @param {import("express").Response} res - Express response object
-   * @returns {Promise<void>} Sends JSON response confirming deletion
-   */
   async deleteList(req, res) {
     try {
       const { id } = req.params;
