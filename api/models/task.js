@@ -2,12 +2,7 @@ const mongoose = require("mongoose");
 
 const ALLOWED_TASK_STATUS = ["pendiente", "en curso", "finalizada"];
 
-/**
- * Task schema definition.
- *
- * Each task belongs to a single user and includes basic
- * lifecycle fields for MVP task tracking.
- */
+
 const TaskSchema = new mongoose.Schema(
   {
     title: {
@@ -25,6 +20,12 @@ const TaskSchema = new mongoose.Schema(
     dueDate: {
       type: Date,
       required: false,
+    },
+    list: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "List",
+      required: false,
+      index: true,
     },
     status: {
       type: String,
