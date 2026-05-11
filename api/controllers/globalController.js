@@ -1,22 +1,11 @@
-/**
- * Generic global controller class providing common CRUD operations.
- * It delegates the actual database logic to a corresponding DAO (Data Access Object).
- */
+
 class GlobalController {
-  /**
-   * Create a new GlobalController.
-   * @param {object} dao - The DAO instance used to interact with the database.
-   */
+  
   constructor(dao) {
     this.dao = dao;
   }
 
-  /**
-   * Create a new document in the database.
-   * @async
-   * @param {object} req - Express request object
-   * @param {object} res - Express response object
-   */
+  
   async create(req, res) {
     try {
       const item = await this.dao.create(req.body);
@@ -29,12 +18,7 @@ class GlobalController {
     }
   }
 
-  /**
-   * Retrieve a document by ID.
-   * @async
-   * @param {object} req - Express request object
-   * @param {object} res - Express response object
-   */
+  
   async read(req, res) {
     try {
       const item = await this.dao.read(req.params.id);
@@ -50,12 +34,7 @@ class GlobalController {
     }
   }
 
-  /**
-   * Update an existing document by ID.
-   * @async
-   * @param {object} req - Express request object
-   * @param {object} res - Express response object
-   */
+  
   async update(req, res) {
     try {
       const item = await this.dao.update(req.params.id, req.body);
@@ -71,12 +50,7 @@ class GlobalController {
     }
   }
 
-  /**
-   * Delete a document by ID.
-   * @async
-   * @param {object} req - Express request object
-   * @param {object} res - Express response object
-   */
+  
   async delete(req, res) {
     try {
       const item = await this.dao.delete(req.params.id);
@@ -92,12 +66,7 @@ class GlobalController {
     }
   }
 
-  /**
-   * Retrieve all documents, optionally filtered by query parameters.
-   * @async
-   * @param {object} req - Express request object
-   * @param {object} res - Express response object
-   */
+  
   async getAll(req, res) {
     try {
       const items = await this.dao.getAll(req.query);
@@ -111,7 +80,5 @@ class GlobalController {
   }
 }
 
-/**
- * Export a singleton instance of GlobalController.
- */
+
 module.exports = GlobalController;
