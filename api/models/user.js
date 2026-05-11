@@ -1,12 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-/**
- * User schema definition.
- *
- * Represents application users stored in MongoDB.
- * Includes authentication fields and automatic timestamps.
- */
+
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -50,18 +45,14 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-/**
- * Hashes the password after validating all fields just before saving the document.
- */
+
 UserSchema.pre("save", async function () {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10);
   }
 });
 
-/**
- * Hashes the password after validating all fields just before updating the document.
- */
+
 UserSchema.post("findOneAndUpdate", async function (doc) {
   if (doc && doc.password && !doc.password.startsWith("$2b$")) {
     const hashed = await bcrypt.hash(doc.password, 10);
@@ -69,8 +60,5 @@ UserSchema.post("findOneAndUpdate", async function (doc) {
   }
 });
 
-/**
- * Mongoose model for the User collection.
- * Provides an interface to interact with user documents.
- */
+
 module.exports = mongoose.model("User", UserSchema);
