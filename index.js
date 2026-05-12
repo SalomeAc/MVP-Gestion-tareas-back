@@ -25,9 +25,7 @@ app.get("/", (req, res) => res.send("Server is running"));
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
 
-  if (process.env.NODE_ENV === "development") {
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  }
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 }
